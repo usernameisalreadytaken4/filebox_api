@@ -10,6 +10,7 @@ from api import app, db
 
 
 TEST_DB = 'test.db'
+file_dir = os.path.join(basedir, 'default.png')  # файл для тестов, можно кинуть любой файл в корень
 
 
 class Tests(unittest.TestCase):
@@ -51,12 +52,12 @@ class Tests(unittest.TestCase):
         return json.loads(self.login_user(username='vasya', password='pupkin').data).get('token')
 
     def upload(self, token, filename):
-        with open('/home/bobrovskiy/Downloads/default.png', 'rb') as image_file:
+        with open(file_dir, 'rb') as image_file:
             file = base64.b64encode(image_file.read()).decode()
         data = {
             "jsonrpc": "2.0",
             "method": "Upload.file",
-            "params": {"path": "vasya", "file": file, "filename": filename},
+            "params": {"path": "vasya", "filename": filename, "encoded_file": file},
             "id": "1"}
         return self.app.post('/api', data=json.dumps(data), headers={'content-type': 'application/json', 'x-access-token': token})
 
@@ -87,12 +88,12 @@ class Tests(unittest.TestCase):
         self.assertEqual(json.loads(response1.data)['result'],  {"message": "user has been created with default folder"})
         self.assertEqual(json.loads(response2.data)['result'], {'message': 'username is already exists. please choose another username'})
 
-    def create_folder(self):
+    def test_create_folder(self):
         token = self.get_token()
         response = self.make_folder(token=token)
         self.assertEqual(json.loads(response.data)['result'], {'message': "folder is created"})
 
-    def create_exists_folder(self):
+    def test_create_exists_folder(self):
         token = self.get_token()
         self.make_folder(token=token)
         data = {
@@ -104,7 +105,7 @@ class Tests(unittest.TestCase):
                       headers={'content-type': 'application/json', 'x-access-token': token})
         self.assertEqual(json.loads(response.data)['result'], {"message": "folder is exists"})
 
-    def create_folder_in_fake_directory(self):
+    def test_create_folder_in_fake_directory(self):
         token = self.get_token()
         data = {
             "jsonrpc": "2.0",
@@ -116,20 +117,20 @@ class Tests(unittest.TestCase):
 
         self.assertEqual(json.loads(response.data)['result'], {"message": "you choose wrong folder path"})
 
-    def upload_file(self):
+    def test_upload_file(self):
         token = self.get_token()
         filename = 'default.png'
         response = self.upload(token=token, filename=filename)
         self.assertEqual(json.loads(response.data)['result'], {"file": filename, "message": "file has been uploaded"})
 
-    def upload_same_file(self):
+    def test_upload_same_file(self):
         token = self.get_token()
         filename = 'default.png'
         self.upload(token=token, filename=filename)
         response = self.upload(token=token, filename=filename)
         self.assertEqual(json.loads(response.data)['result'], {"message": "file already exists"})
 
-    def delete_file(self):
+    def test_delete_file(self):
         token = self.get_token()
         filename = 'default.png'
         self.upload(token=token, filename=filename)
@@ -141,7 +142,7 @@ class Tests(unittest.TestCase):
                                  headers={'content-type': 'application/json', 'x-access-token': token})
         self.assertEqual(json.loads(response.data)['result'], {"file": filename, "message": "has been deleted"})
 
-    def delete_ghost_file(self):
+    def test_delete_ghost_file(self):
         token = self.get_token()
         data = {"jsonrpc": "2.0",
                 "method": "Delete.file",
@@ -151,7 +152,7 @@ class Tests(unittest.TestCase):
                                  headers={'content-type': 'application/json', 'x-access-token': token})
         self.assertEqual(json.loads(response.data)['result'], {"message": "file has not found"})
 
-    def delete_file_from_wrong_directory(self):
+    def test_delete_file_from_wrong_directory(self):
         token = self.get_token()
         filename = 'default.png'
         self.upload(token=token, filename=filename)
@@ -163,20 +164,20 @@ class Tests(unittest.TestCase):
                                  headers={'content-type': 'application/json', 'x-access-token': token})
         self.assertEqual(json.loads(response.data)['result'], {"message": "folder has not found"})
 
-    def move_file(self):
+    def test_move_file(self):
         token = self.get_token()
         self.make_folder(token)
         filename = 'default.png'
         self.upload(token=token, filename=filename)
         data = {"jsonrpc": "2.0",
                 "method": "Move.file",
-                "params" : {"oldpath": "vasya", "newpath": "folder1", "filename": filename},
+                "params": {"oldpath": "vasya", "newpath": "vasya/folder1", "filename": filename},
                 "id": "1"}
         response = self.app.post('/api', data=json.dumps(data),
                                  headers={'content-type': 'application/json', 'x-access-token': token})
         self.assertEqual(json.loads(response.data)['result'], {"message": "file has been moved"})
 
-    def move_file_from_wrong_directory(self):
+    def test_move_file_from_wrong_directory(self):
         token = self.get_token()
         self.make_folder(token)
         filename = 'default.png'
@@ -189,7 +190,7 @@ class Tests(unittest.TestCase):
                                  headers={'content-type': 'application/json', 'x-access-token': token})
         self.assertEqual(json.loads(response.data)['result'], {"message": "folder is not available"})
 
-    def move_file_in_wrong_directory(self):
+    def test_move_file_in_wrong_directory(self):
         token = self.get_token()
         self.make_folder(token)
         self.make_folder(token, folder_name='folder2')
@@ -203,20 +204,20 @@ class Tests(unittest.TestCase):
                                  headers={'content-type': 'application/json', 'x-access-token': token})
         self.assertEqual(json.loads(response.data)['result'], {"message": "destination folder is not available"})
 
-    def move_ghost_file(self):
+    def test_move_ghost_file(self):
         token = self.get_token()
         self.make_folder(token)
         filename = 'default.png'
         self.upload(token=token, filename=filename)
         data = {"jsonrpc": "2.0",
                 "method": "Move.file",
-                "params": {"oldpath": "vasya", "newpath": "folder1", "filename": "hren.jpg"},
+                "params": {"oldpath": "vasya", "newpath": "vasya/folder1", "filename": "hren.jpg"},
                 "id": "1"}
         response = self.app.post('/api', data=json.dumps(data),
                                  headers={'content-type': 'application/json', 'x-access-token': token})
         self.assertEqual(json.loads(response.data)['result'], {"message": "file is not available"})
 
-    def download_file(self):
+    def test_download_file(self):
         token = self.get_token()
         filename = 'default.png'
         self.upload(token=token, filename=filename)
@@ -228,7 +229,7 @@ class Tests(unittest.TestCase):
                                  headers={'content-type': 'application/json', 'x-access-token': token})
         self.assertTrue(json.loads(response.data)['result'].get('file'))
 
-    def download_ghost_file(self):
+    def test_download_ghost_file(self):
         token = self.get_token()
         filename = 'default.png'
         self.upload(token=token, filename=filename)
@@ -240,7 +241,7 @@ class Tests(unittest.TestCase):
                                  headers={'content-type': 'application/json', 'x-access-token': token})
         self.assertEqual(json.loads(response.data)['result'], {"message": "file is not available"})
 
-    def download_file_from_ghost_directory(self):
+    def test_download_file_from_ghost_directory(self):
         token = self.get_token()
         filename = 'default.png'
         self.upload(token=token, filename=filename)
@@ -252,7 +253,7 @@ class Tests(unittest.TestCase):
                                  headers={'content-type': 'application/json', 'x-access-token': token})
         self.assertEqual(json.loads(response.data)['result'], {"message": "wrong folder"})
 
-    def share_file(self):
+    def test_share_file(self):
         token = self.get_token()
         filename = 'default.png'
         self.upload(token=token, filename=filename)
@@ -264,7 +265,7 @@ class Tests(unittest.TestCase):
                                  headers={'content-type': 'application/json', 'x-access-token': token})
         self.assertTrue(json.loads(response.data)['result'].get('public_link'))
 
-    def share_ghost_file(self):
+    def test_share_ghost_file(self):
         token = self.get_token()
         filename = 'default.png'
         self.upload(token=token, filename=filename)

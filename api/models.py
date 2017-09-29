@@ -89,7 +89,7 @@ class File(db.Model):
         with open(f'{app.config["UPLOAD_FOLDER"]}/{self.inner_name}', "wb") as file:
             file.write(base64.decodebytes(bytes(encoded_file.encode())))
         db.session.commit()
-        return {"file": file.public_name, "message": "file has been uploaded"}
+        return {"file": self.public_name, "message": "file has been uploaded"}
 
     @staticmethod
     def delete_file(path, filename, owner_id):
@@ -130,11 +130,11 @@ class File(db.Model):
     @staticmethod
     def download_file(path, filename, owner_id):
         folder = Folder.query.filter_by(path=path, owner_id=owner_id).first()
+        if folder is None:
+            return {"message": "wrong folder"}
         file = File.query.filter_by(public_name=filename, folder_id=folder.id, owner_id=owner_id).first()
         if file is None:
             return {"message": "file is not available"}
-        if folder is None:
-            return {"message": "wrong folder"}
         file.download_count += 1
         count = file.download_count
         db.session.commit()
