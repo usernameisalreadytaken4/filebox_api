@@ -78,8 +78,8 @@ def share_file(current_user, path, filename, time):
 
 
 @jsonrpc.method('Create.user')
-def create_user(name, password):
-    return User.create_user(name, password)
+def create_user(username, password):
+    return User.create_user(username, password)
 
 
 @jsonrpc.method('Login.user')

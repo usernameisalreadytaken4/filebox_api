@@ -13,18 +13,18 @@ class User(db.Model):
     admin = db.Column(db.Boolean)
 
     @staticmethod
-    def create_user(name, password):
-        check_user = User.query.filter_by(name=name)
+    def create_user(username, password):
+        check_user = User.query.filter_by(name=username).first()
         if check_user:
             return {"message": "username is already exists. please choose another username"}
         hashed_password = generate_password_hash(password, method='sha256')
-        new_user = User(name=name, password=hashed_password, admin=False)
+        new_user = User(name=username, password=hashed_password, admin=False)
         db.session.add(new_user)
-        new_user = User.query.filter_by(name=name).first()
+        new_user = User.query.filter_by(name=username).first()
         default_folder = Folder(name=new_user.name, parent=None, path=new_user.name, owner_id=new_user.id)
         db.session.add(default_folder)
         db.session.commit()
-        return {'message': 'user has been created with default folder'}
+        return {"message": "user has been created with default folder"}
 
 
 class Folder(db.Model):
@@ -53,7 +53,7 @@ class Folder(db.Model):
     def create_folder(name, path, owner_id):
         current_folder = Folder.query.filter_by(path=path, owner_id=owner_id).first()
         if current_folder is None:
-            return {"message": "folder is not exists"}
+            return {"message": "you choose wrong folder path"}
         check_folder = Folder.query.filter_by(name=name, path=f'{path}/{name}').first()
         if check_folder is not None:
             return {"message": "folder is exists"}
@@ -81,7 +81,6 @@ class File(db.Model):
         self.owner_id = owner_id
         self.inner_name = f'{self.owner_id}_{self.folder_id}_{self.public_name}'
         self.personal_link = f'{folder.path}/{self.inner_name}'
-        print('пизда ' * 10)
         check_file = File.query.filter_by(folder_id=self.folder_id, owner_id=self.owner_id,
                                           public_name=self.public_name, inner_name=self.inner_name).first()
         if check_file:
@@ -132,8 +131,10 @@ class File(db.Model):
     def download_file(path, filename, owner_id):
         folder = Folder.query.filter_by(path=path, owner_id=owner_id).first()
         file = File.query.filter_by(public_name=filename, folder_id=folder.id, owner_id=owner_id).first()
-        if file is None or folder is None:
-            return False
+        if file is None:
+            return {"message": "file is not available"}
+        if folder is None:
+            return {"message": "wrong folder"}
         file.download_count += 1
         count = file.download_count
         db.session.commit()
