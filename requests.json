@@ -1,0 +1,15 @@
+{"jsonrpc": "2.0", "method": "Create.user", "params" : {"name": "user", "password": "12345"}, "id": "1"}
+
+{"jsonrpc": "2.0", "method": "Login.user", "params" : {"username": "user", "password": "12345"}, "id": "1"}
+
+{"jsonrpc": "2.0", "method": "View.user", "params" : {"path": "user"}, "id": "1"}
+
+{"jsonrpc": "2.0", "method": "Create.folder", "params" : {"path": "user/folder1", "name": "folder1infolder1"}, "id": "1"}
+
+{"jsonrpc": "2.0", "method": "Move.file", "params" : {"oldpath": "user", "newpath": "user/folder1", "filename": "default.png"}, "id": "1"}
+
+{"jsonrpc": "2.0", "method": "Get.file", "params" : {"filename": "default.png", "path": "user/folder1"}, "id": "1"}
+
+{"jsonrpc": "2.0", "method": "Delete.file", "params" : {"filename": "default.png", "path": "user/folder1"}, "id": "1"}
+
+{"jsonrpc": "2.0", "method": "Share.file", "params" : {"filename": "default.png", "path": "user", "time": "5"}, "id": "1"}
