@@ -4,7 +4,7 @@ import jwt
 from flask import request, make_response
 from flask_jsonrpc import jsonify, JSONRPC
 from werkzeug.security import check_password_hash
-from api import app, db
+from api import app
 from .models import File, Folder, User, PublicLinks
 
 

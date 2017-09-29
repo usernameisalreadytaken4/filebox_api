@@ -8,4 +8,4 @@ db = SQLAlchemy(app)
 
 
 
-from api import views, models
+
