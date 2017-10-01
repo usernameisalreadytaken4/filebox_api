@@ -1,1 +1,1 @@
-for first use run app.py module for create db
+for first use run api/models.py module for create db
